@@ -4,6 +4,7 @@ import random
 import statistics
 import numpy
 import requests
+import matplotlib.pyplot as plt
 from datetime import date, timedelta
 
 # import api key
@@ -68,3 +69,17 @@ my_stocks_df = pd.DataFrame(stock_dict)
 
 # print the df
 print(my_stocks_df)
+
+# create a horizontal bar chart that shows the percent change for each of the stocks to see which did the best
+plt.barh(stock_symbol, height = 0.4, width = percent_change, color = 'r')
+# annotate the chart
+plt.title(f'Percent Change for {yesterday_date}')
+plt.xlabel('Stock Symbol')
+plt.ylabel('Percent Change')
+
+# show the chart
+plt.show()
+
+# save the stocks for that day into a dictionary
+today = date.today()
+daily_dict = {f'{today}': stock_dict}
