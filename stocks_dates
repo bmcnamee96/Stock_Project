@@ -1,0 +1,92 @@
+# import dependencies
+import pandas as pd
+import requests
+import time
+from datetime import datetime
+
+# get the api key
+from config import key
+
+# what stocks do you want to look at
+symbols = ['AAPL', 'TSLA']
+date_range = [pd.date_range(input("What day would you like to start?"), input('What day would you like to end?'))]
+
+dates_df = pd.DataFrame(date_range)
+
+dates = []
+
+for date in dates_df[0]:
+    date_str = date.strftime('%Y-%m-%d')
+    dates.append(date_str)
+
+# create a base url from polygon.io
+base_url = 'https://api.polygon.io/v1/open-close/'
+
+# create counters
+record_count = 1
+set_count = 1
+
+# create an empty list to hold the stock data
+stock_data = []
+
+# print the beginning of the logging
+print('Beginning Data Retrieval     ')
+print('-----------------------------')
+
+# loop through all the symbols in our list
+for symbol in symbols:
+    
+    for i, day in enumerate(dates):
+        
+        #group urls in sets of 50 for logging purposes
+        if (i % 5 == 0 and i >= 5):
+            set_count += 1
+            record_count = 1
+            time.sleep(60)
+
+        stock_url = base_url + symbol + '/' + day + '/?adjusted=false&apiKey=' + key
+
+        # log the url, record, and set numbers and the city
+        print(f'Processing Record {record_count} of Set {set_count} | {symbol}: {dates[i]}')
+        
+        # add 1 to the record count
+        record_count += 1
+        
+        # Run an API request for each of the cities.
+        try:
+            # Parse the JSON and retrieve data.
+            stock = requests.get(stock_url).json()
+            # Parse out the needed data.
+            stock_date = stock['from']
+            stock_close = stock['close']
+            stock_open = stock['open']
+            stock_symbol = stock['symbol']
+            percent_change = (stock_close - stock_open) / stock_close * 100
+            # Append the city information into city_data list.
+            stock_data.append({
+                'date': stock_date,
+                'close': stock_close,
+                'open': stock_open,
+                'symbol': stock_symbol,
+                'percent change': percent_change
+            })
+
+    # If an error is experienced, skip the stock date.
+        except:
+            print("Not found. Skipping...")
+            pass
+    
+    time.sleep(60)
+    set_count += 1
+
+# Indicate that Data Loading is complete.
+print("-----------------------------")
+print("Data Retrieval Complete      ")
+print("-----------------------------")
+
+# create a df with the data we collected
+stock_df = pd.DataFrame(stock_data)
+# set the index to be the date
+stock_df = stock_df.set_index('date')
+
+print(stock_df)

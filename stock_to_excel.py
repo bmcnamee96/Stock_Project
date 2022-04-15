@@ -4,34 +4,36 @@ import requests
 import matplotlib.pyplot as plt
 from openpyxl.workbook import Workbook
 from openpyxl import load_workbook
-from datetime import date, timedelta
 
 # import api key
 from config import key
 
 my_symbols = ['AAPL', 'TSLA', 'FB', 'MSFT', 'NVDA']
-yesterday_date = date.today() - timedelta(1)
+dates = ['2022-04-01', 
+    '2022-04-04', '2022-04-05','2022-04-06', '2022-04-07' '2022-04-08', 
+    '2022-04-11', '2022-04-12', '2022-04-13', '2022-04-14']
 
 # create a base url from polygon.io
 base_url = 'https://api.polygon.io/v1/open-close/'
 
 # create an empty list to hold all of the urls
 url_list = []
-# loop through the symbols and create a list of the urls
-for symbol in my_symbols:
-    url_list.append(f'{base_url}{symbol}/{yesterday_date}/?adjusted=false&apiKey={key}')
-
 # create an empty list to hold the results in json format
 res = []
-# loop through the url_list and request the information
-for url in url_list:
-    res.append(requests.get(url).json())
-
 # lists that will create the df
 stock_close = []
 stock_open = []
 percent_change = []
 stock_symbol = []
+
+# loop through the symbols and create a list of the urls
+for x in dates:
+    for symbol in my_symbols:
+        url_list.append(f'{base_url}{symbol}/{x}/?adjusted=false&apiKey={key}')
+
+# loop through the url_list and request the information
+for url in url_list:
+    res.append(requests.get(url).json())
 
 # fill the lists close, open, symbol
 for stock_info in res:
@@ -55,25 +57,40 @@ while i < length:
 
 # create a dict
 stock_dict = {
-    'date': yesterday_date,
-    'amount invested': money_invested,
+    'date': dates,
+    'symbols': my_symbols,
     'open': stock_open,
     'close': stock_close,
     'percent change': percent_change
 }
 
-# put the dictionary into a df for easier viewing
-my_stocks_df = pd.DataFrame(stock_dict)
+# save the stocks for that day into an excel file
+# use a while loop to loop through all of the data and save it into the excel file
 
-# print the df
-print(my_stocks_df)
+i = 0
 
-# create a horizontal bar chart that shows the percent change for each of the stocks to see which did the best
-plt.barh(stock_symbol, height = 0.4, width = percent_change, color = 'r')
-# annotate the chart
-plt.title(f'Percent Change for {yesterday_date}')
-plt.xlabel('Stock Symbol')
-plt.ylabel('Percent Change')
+while i < len(stock_symbol):
+    daily_stock = []
+    daily_stock.append(stock_symbol[i])
+    daily_stock.append(dates)
+    daily_stock.append(stock_open[i])
+    daily_stock.append(stock_close[i])
+    daily_stock.append(percent_change[i])
 
-# show the chart
-plt.show()
+    # append the excel file and add the data onto it
+    workbook_name = 'testing.xlsx'
+    wb = load_workbook(workbook_name)
+    page = wb.active
+
+    # new data to write
+    new_daily_stock = [daily_stock]
+
+    for info in new_daily_stock:
+        page.append(info)
+    
+    # save the excel file
+    wb.save(filename=workbook_name)
+
+    i += 1
+
+
