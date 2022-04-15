@@ -5,6 +5,8 @@ import statistics
 import numpy
 import requests
 import matplotlib.pyplot as plt
+from openpyxl.workbook import Workbook
+from openpyxl import load_workbook
 from datetime import date, timedelta
 
 # import api key
@@ -57,7 +59,7 @@ while i < length:
 
 # create a dict
 stock_dict = {
-    'symbol': stock_symbol,
+    'date': yesterday_date,
     'amount invested': money_invested,
     'open': stock_open,
     'close': stock_close,
@@ -80,6 +82,33 @@ plt.ylabel('Percent Change')
 # show the chart
 plt.show()
 
-# save the stocks for that day into a dictionary
-today = date.today()
-daily_dict = {f'{today}': stock_dict}
+# save the stocks for that day into an excel file
+# use a while loop to loop through all of the data and save it into the excel file
+
+i = 0
+
+while i < len(stock_symbol):
+    daily_stock = []
+    daily_stock.append(stock_symbol[i])
+    daily_stock.append(yesterday_date)
+    daily_stock.append(stock_open[i])
+    daily_stock.append(stock_close[i])
+    daily_stock.append(percent_change[i])
+
+    # append the excel file and add the data onto it
+    workbook_name = 'testing.xlsx'
+    wb = load_workbook(workbook_name)
+    page = wb.active
+
+    # new data to write
+    new_daily_stock = [daily_stock]
+
+    for info in new_daily_stock:
+        page.append(info)
+    
+    # save the excel file
+    wb.save(filename=workbook_name)
+
+    i += 1
+
+
